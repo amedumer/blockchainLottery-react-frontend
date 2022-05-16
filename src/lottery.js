@@ -1,6 +1,6 @@
 import web3 from './web3';
 
-const address = "0xDEf4772f1ADF27c2e1f9f369b61207C730D633a6";
+const address = "0x9161070d663BC60ba46cf78Be34FCDe174831d20";
 
 const abi =[
     {
@@ -21,6 +21,25 @@ const abi =[
         "inputs": [],
         "stateMutability": "nonpayable",
         "type": "constructor"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+            }
+        ],
+        "name": "getPlayerCount",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
     },
     {
         "inputs": [],
