@@ -15,6 +15,8 @@ import Typography from "@mui/material/Typography";
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import RecentWinners from "./components/recentwinners";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 
 
 const darkTheme = createTheme({
@@ -23,17 +25,23 @@ const darkTheme = createTheme({
     },
 });
 
+const Alert = React.forwardRef(function Alert(props, ref) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
+
 class App extends React.Component {
 
     state = {
         manager : '',
         players: [],
         balance: '',
-        message : '',
         currentAddress  : '',
         lotteryIdx : '',
         lastWinner : '',
-        lastParticipantCount: 0
+        lastParticipantCount: 0,
+        open: false,
+        message : '',
+        snackType:"info"
     }
 
     async componentDidMount() {
@@ -67,15 +75,17 @@ class App extends React.Component {
         const accounts = await web3.eth.getAccounts();
 
 
-        this.setState({message : "Waiting on transaction approval..."});
+        this.showSnackbar("Waiting on transaction approval...","info");
+
 
         try{
             await lottery.methods.enter().send({from:accounts[0], value: web3.utils.toWei("0.01","ether")});
-            this.setState({message : "You have successfully entered the lottery."});
+            this.showSnackbar("You have successfully entered the lottery.","success");
         }
         catch(err){
             console.log(err);
-            this.setState({message : "Transaction approval failed! Please try again."});
+            this.showSnackbar("Transaction approval failed! Please try again.","error");
+
         }
 
     }
@@ -84,23 +94,50 @@ class App extends React.Component {
         event.preventDefault();
         const accounts = await web3.eth.getAccounts();
 
-        this.setState({message: "Attempting to pick winner..."})
+        this.showSnackbar("Attempting to pick winner...","info");
 
         try{
             await lottery.methods.pickWinner().send({from:accounts[0]});
-            this.setState({message: "Winner succesfully picked!"})
+            this.showSnackbar("Winner succesfully picked!","success");
 
         }
         catch(err){
-            this.setState({message: "Failed to pick winner..."})
-            console.log(err);
+            this.showSnackbar("Failed to pick winner...","error");
         }
     }
+
+     handleClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        this.setState({open:false})
+    };
+
+
+    showSnackbar = (message, type) => {
+        this.setState({message : message,snackType:type,open:true});
+    };
+
+
 
     render() {
     return (
             <React.Fragment>
                 <ThemeProvider theme={darkTheme}>
+                    <Snackbar
+                        open={this.state.open}
+                        autoHideDuration={6000}
+                        onClose={this.handleClose}
+                    >
+                        <Alert
+                            onClose={this.handleClose}
+                            severity={this.state.snackType}
+                            sx={{ width: "100%" }}
+                        >
+                            {this.state.message}
+                        </Alert>
+                    </Snackbar>
                     <ButtonAppBar address = {this.state.currentAddress} onPickWinner={this.pickWinner} onEnterLottery={this.onClickEnter} alreadyEntered = {this.state.players.includes(this.state.currentAddress)} isAdmin={this.state.currentAddress === this.state.manager}/>
                     <Grid container spacing={2}  sx={{
                         display: "flex",
@@ -167,8 +204,6 @@ class App extends React.Component {
                             </Paper>
                         </Grid>
                     </Grid>
-
-
                 </ThemeProvider>
             </React.Fragment>
     );
